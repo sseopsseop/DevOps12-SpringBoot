@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
 
 import java.net.URI;
 import java.util.List;
@@ -258,7 +259,24 @@ public class ApiController {
         }
     }
 
+    @GetMapping("/boards/{id}")
+    public ResponseEntity<?> boardDetail(@PathVariable("id") Long id) {
+        ResponseDto<FreeBoard> responseDto = new ResponseDto<>();
 
+        try{
+            FreeBoard freeBoard = apiService.findFreeBoardById(id);
+
+            responseDto.setStatusCode(200);
+            responseDto.setStatusMessage("OK");
+            responseDto.setData(freeBoard);
+
+            return ResponseEntity.ok(responseDto);
+        }catch(Exception e) {
+            responseDto.setStatusCode(500);
+            responseDto.setStatusMessage(e.getMessage());
+            return ResponseEntity.internalServerError().body(responseDto);
+        }
+    }
 
 
 
