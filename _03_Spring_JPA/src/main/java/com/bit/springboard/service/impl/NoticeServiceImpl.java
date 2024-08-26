@@ -9,6 +9,8 @@ import com.bit.springboard.service.BoardService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -51,25 +53,19 @@ public class NoticeServiceImpl implements BoardService {
     }
 
     @Override
-    public List<BoardDto> findAll(Map<String, String> searchMap, Criteria cri) {
-        Map<String, Object> paramMap = new HashMap<>();
+    public Page<BoardDto> findAll(Map<String, String> searchMap, Pageable pageable) {
 
-        paramMap.put("search", searchMap);
-
-        cri.setStartNum((cri.getPageNum() - 1) * cri.getAmount());
-
-        paramMap.put("cri", cri);
-
-        return noticeMapper.findAll(paramMap);
+//        return noticeMapper.findAll(paramMap);
+        return null;
     }
 
     @Override
-    public BoardDto findById(int id) {
+    public BoardDto findById(Long id) {
         return noticeMapper.findById(id);
     }
 
     @Override
-    public List<BoardFileDto> findFilesById(int id) {
+    public List<BoardFileDto> findFilesById(Long id) {
         return noticeMapper.findFilesById(id);
     }
 
@@ -146,12 +142,12 @@ public class NoticeServiceImpl implements BoardService {
     }
 
     @Override
-    public void updateBoardCnt(int id) {
+    public void updateBoardCnt(Long id) {
         noticeMapper.updateBoardCnt(id);
     }
 
     @Override
-    public void remove(int id) {
+    public void remove(Long id) {
         noticeMapper.removeFiles(id);
         noticeMapper.remove(id);
     }

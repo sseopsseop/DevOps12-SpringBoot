@@ -7,6 +7,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationContext;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -27,17 +29,14 @@ public class BoardController {
     private final ApplicationContext applicationContext;
 
     @GetMapping("/free-list")
-    public ModelAndView freeListView(@RequestParam Map<String, String> searchMap, Criteria cri) {
+    public ModelAndView freeListView(@RequestParam Map<String, String> searchMap,
+                                     @PageableDefault(page = 0, size = 10) Pageable pageable) {
         ModelAndView mav = new ModelAndView();
 
         boardService = applicationContext.getBean("freeServiceImpl", BoardService.class);
 
-        mav.addObject("freeList", boardService.findAll(searchMap, cri));
+        mav.addObject("freeList", boardService.findAll(searchMap, pageable));
         mav.addObject("searchMap", searchMap);
-
-        int total = boardService.findTotalCnt(searchMap);
-
-        mav.addObject("page", new PageDto(cri, total));
 
         mav.setViewName("board/free-list");
         return mav;
@@ -54,18 +53,18 @@ public class BoardController {
 
         List<Map<String, Object>> noticeList = new ArrayList<>();
 
-        boardService.findAll(searchMap, cri).forEach(boardDto -> {
-            Map<String, Object> map = new HashMap<>();
-
-            map.put("notice", boardDto);
-
-            List<BoardFileDto> noticeFileList = boardService.findFilesById(boardDto.getId());
-
-            if(noticeFileList.size() > 0)
-                map.put("file", noticeFileList.get(0));
-
-            noticeList.add(map);
-        });
+//        boardService.findAll(searchMap, cri).forEach(boardDto -> {
+//            Map<String, Object> map = new HashMap<>();
+//
+//            map.put("notice", boardDto);
+//
+//            List<BoardFileDto> noticeFileList = boardService.findFilesById(boardDto.getId());
+//
+//            if(noticeFileList.size() > 0)
+//                map.put("file", noticeFileList.get(0));
+//
+//            noticeList.add(map);
+//        });
 
 //        mav.addObject("noticeList", boardService.findAll(searchMap, cri));
         mav.addObject("noticeList", noticeList);
@@ -127,6 +126,7 @@ public class BoardController {
 
         try {
             BoardDto returnBoardDto = boardService.post(boardDto, uploadFiles);
+            returnBoardDto.setType(boardDto.getType());
 
             responseDto.setStatusCode(201);
             responseDto.setStatusMessage("created");
@@ -141,7 +141,7 @@ public class BoardController {
     }
 
     @GetMapping("/{id}")
-    public ModelAndView boardDetail(@PathVariable("id") int id,
+    public ModelAndView boardDetail(@PathVariable("id") Long id,
                                     @RequestParam("type") String type) {
         ModelAndView mav = new ModelAndView();
 
@@ -160,7 +160,7 @@ public class BoardController {
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<?> modify(@PathVariable("id") int id,
+    public ResponseEntity<?> modify(@PathVariable("id") Long id,
                                     BoardDto boardDto,
                                     MultipartFile[] uploadFiles,
                                     MultipartFile[] changeFiles,
@@ -191,7 +191,7 @@ public class BoardController {
     }
 
     @GetMapping("/cnt/{id}")
-    public void updateBoardCnt(@PathVariable("id") int id,
+    public void updateBoardCnt(@PathVariable("id") Long id,
                                @RequestParam("type") String type,
                                HttpServletResponse response) {
         if(type.equals("free")) {
@@ -210,7 +210,7 @@ public class BoardController {
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> remove(@PathVariable("id") int id,
+    public ResponseEntity<?> remove(@PathVariable("id") Long id,
                                     @RequestParam("type") String type) {
         if(type.equals("free")) {
             boardService = applicationContext.getBean("freeServiceImpl", BoardService.class);
@@ -242,19 +242,19 @@ public class BoardController {
 
             List<Map<String, Object>> noticeList = new ArrayList<>();
 
-            boardService.findAll(searchMap, cri).forEach(boardDto -> {
-                List<BoardFileDto> boardFileDtoList = boardService.findFilesById(boardDto.getId());
-
-                Map<String, Object> map = new HashMap<>();
-
-                map.put("notice", boardDto);
-
-                if(boardFileDtoList.size() > 0) {
-                    map.put("file", boardFileDtoList.get(0));
-                }
-
-                noticeList.add(map);
-            });
+//            boardService.findAll(searchMap, cri).forEach(boardDto -> {
+//                List<BoardFileDto> boardFileDtoList = boardService.findFilesById(boardDto.getId());
+//
+//                Map<String, Object> map = new HashMap<>();
+//
+//                map.put("notice", boardDto);
+//
+//                if(boardFileDtoList.size() > 0) {
+//                    map.put("file", boardFileDtoList.get(0));
+//                }
+//
+//                noticeList.add(map);
+//            });
 
             responseDto.setStatusCode(200);
             responseDto.setStatusMessage("OK");
