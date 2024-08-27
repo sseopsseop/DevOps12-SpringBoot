@@ -36,7 +36,10 @@ public class FreeServiceImpl implements BoardService {
     @Override
     public BoardDto post(BoardDto boardDto, MultipartFile[] uploadFiles) {
 
-        Member member = memberRepository.findByNickname(boardDto.getNickname());
+        Member member = memberRepository.findByNickname(boardDto.getNickname())
+                .orElseThrow(
+                        ()-> new RuntimeException("Member not exist")
+                );
 
         boardDto.setRegdate(LocalDateTime.now());
         boardDto.setModdate(LocalDateTime.now());
@@ -88,7 +91,8 @@ public class FreeServiceImpl implements BoardService {
 
     @Override
     public BoardDto findById(Long id) {
-        return freeMapper.findById(id);
+        return freeBoardRepository.findById(id).orElseThrow(
+                () -> new RuntimeException("board not exist")).toDto();
     }
 
     @Override
@@ -153,30 +157,66 @@ public class FreeServiceImpl implements BoardService {
         }
 
         boardDto.setModdate(LocalDateTime.now());
-        freeMapper.modify(boardDto);
 
-        uFileList.forEach(boardFileDto -> {
-            if(boardFileDto.getFilestatus().equals("U")) {
-                freeMapper.modifyFile(boardFileDto);
-            } else if(boardFileDto.getFilestatus().equals("D")) {
-                freeMapper.removeFile(boardFileDto);
-            } else if(boardFileDto.getFilestatus().equals("I")) {
-                freeMapper.postFile(boardFileDto);
-            }
-        });
+//        freeMapper.modify(boardDto);
+//
+//        uFileList.forEach(boardFileDto -> {
+//            if(boardFileDto.getFilestatus().equals("U")) {
+//                freeMapper.modifyFile(boardFileDto);
+//            } else if(boardFileDto.getFilestatus().equals("D")) {
+//                freeMapper.removeFile(boardFileDto);
+//            } else if(boardFileDto.getFilestatus().equals("I")) {
+//                freeMapper.postFile(boardFileDto);
+//            }
+//        });
 
-        return freeMapper.findById(boardDto.getId());
+//        FreeBoard board = boardDto.toFreeBoardEntity(
+//                memberRepository.findById(boardDto.getWriter_id()).orElseThrow());
+
+        FreeBoard freeBoard = freeBoardRepository.findById(boardDto.getId()).orElseThrow(
+                () -> new RuntimeException("board not exist")
+        );
+
+        freeBoard.setTitle(boardDto.getTitle());
+        freeBoard.setContent(boardDto.getContent());
+        freeBoard.setModdate(boardDto.getModdate());
+
+        uFileList.forEach(
+                boardFileDto -> {
+                    if(boardFileDto.getFilestatus().equals("U")
+                            || boardFileDto.getFilestatus().equals("I")) {
+                        freeBoard.getBoardFileList().add(boardFileDto.toFreeBoardFileEntity(freeBoard));
+                    } else if(boardFileDto.getFilestatus().equals("D")) {
+                        fileUtils.deleteFile("free/", boardFileDto.getFilename());
+                        freeBoardFileRepository.delete(boardFileDto.toFreeBoardFileEntity(freeBoard));
+                    }
+                }
+        );
+
+        return freeBoardRepository.save(freeBoard).toDto();
     }
 
     @Override
     public void updateBoardCnt(Long id) {
-        freeMapper.updateBoardCnt(id);
+        FreeBoard freeBoard = freeBoardRepository.findById(id).orElseThrow(
+                () -> new RuntimeException("board not exist"));
+
+        freeBoard.setCnt(freeBoard.getCnt() + 1);
+
+        freeBoardRepository.save(freeBoard);
     }
 
     @Override
     public void remove(Long id) {
-        freeMapper.removeFiles(id);
-        freeMapper.remove(id);
+        List<FreeBoardFile> freeBoardFileList =
+                freeBoardRepository.findById(id).orElseThrow(
+                        () -> new RuntimeException("board not exist")
+                ).getBoardFileList();
+
+        freeBoardFileList.forEach(freeBoardFile ->
+                fileUtils.deleteFile("free/", freeBoardFile.getFilename()));
+
+        freeBoardRepository.deleteById(id);
     }
 
     @Override
