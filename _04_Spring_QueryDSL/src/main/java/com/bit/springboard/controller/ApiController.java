@@ -402,8 +402,9 @@ public class ApiController {
     }
 
     @GetMapping("/members-id-nickname")
-    public ResponseEntity<?> findByBiggerThanNicknameContaining(@RequestParam("id") Long id,
-                                                                @RequestParam("nickname") String nickname) {
+    public ResponseEntity<?> findBiggerThanNicknameContaining(
+                                    @RequestParam("id") Long id,
+                                    @RequestParam("nickname") String nickname) {
         ResponseDto<Member> responseDto = new ResponseDto<>();
 
         try {
@@ -420,7 +421,6 @@ public class ApiController {
             return ResponseEntity.internalServerError().body(responseDto);
         }
     }
-
 
 
 
